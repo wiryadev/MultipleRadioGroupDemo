@@ -1,17 +1,16 @@
 package com.wiryadev.multipleradiogroupdemo
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.RadioGroup
 import android.widget.Toast
-import androidx.core.view.allViews
+import androidx.appcompat.app.AppCompatActivity
 import com.wiryadev.multipleradiogroupdemo.databinding.ActivityMainBinding
+import kotlin.math.abs
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private var currentSectionContent: SectionContent? = null
+    private var currentCheckedId: Int? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,21 +29,36 @@ class MainActivity : AppCompatActivity() {
             val radioGroupDropdown = RadioGroupDropdown(this).apply {
                 setTitle(section.title)
                 setData(radioButtonSectionContent)
-                onContainerClicked = {
+                onContainerClicked = { tag ->
                     dummySections.forEach {
-                        if (it.title != section.title) {
+                        if (it.title != tag) {
                             val radioGroup =
                                 binding.root.findViewWithTag<RadioGroupDropdown>(it.title)
-                            if (radioGroup.isExpanded()) {
-                                radioGroup.collapse()
+                            radioGroup.collapse()
+                            radioGroup.clearSelection()
+                        } else {
+
+                            Log.d("CheckRadioId", "==============================")
+                            Log.d("CheckRadioId", "current Id: $currentCheckedId")
+                            Log.d("CheckRadioId", "formattedIndex: $formattedSectionIndex")
+                            val rg = binding.root.findViewWithTag<RadioGroupDropdown>(tag)
+                            currentCheckedId?.let { id ->
+                                val absolute = abs(id - formattedSectionIndex)
+                                Log.d("CheckRadioId", "absolute: $absolute")
+                                if ((absolute < 100) && (absolute < section.content.size)) {
+                                    rg.setCheckedId(id)
+                                }
                             }
                         }
                     }
                 }
-                onCheckedChange = { labelTag, checkedId ->
-//                    Log.d("CheckRadioId", "checkedId: $checkedId")
+                onCheckedChange = { checkedId ->
+                    currentCheckedId = checkedId
+//                    Log.d("CheckRadioId", "checkedchange: $checkedId")
 //                    Log.d("CheckRadioId", "formattedSectionIndex: $formattedSectionIndex")
-                    onCheckedChange(labelTag, sectionIndex, checkedId - formattedSectionIndex)
+
+                    Log.d("CheckRadioId", "onCheck: ${checkedId - formattedSectionIndex}")
+                    onCheckedChange(sectionIndex, abs(checkedId - formattedSectionIndex))
                 }
             }
             binding.root.addView(radioGroupDropdown)
@@ -52,29 +66,37 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onCheckedChange(
-        labelTag: String,
         radioGroupId: Int,
         radioButtonId: Int
     ) {
+//        Log.d("CheckRadioId", "===================================")
+//        Log.d("CheckRadioId", "radioGroup Id: $radioGroupId")
+//        Log.d("CheckRadioId", "radioButton Id: $radioButtonId")
+//        val section = dummySections[radioGroupId]
+//        val content = section.content[radioButtonId]
+//        dummySections.forEach {
+//            if (it.title != section.title) {
+//                Log.d("CheckRadioId", "findwithtag section: ${section.title}")
+//                Log.d("CheckRadioId", "findwithtag loop: ${it.title}")
+//                Log.d("CheckRadioId", "===================================")
+//                val radioGroup = binding.root.findViewWithTag<RadioGroupDropdown>(it.title)
+//                radioGroup.clearSelection()
+//            }
+//        }
+
+
         val section = dummySections[radioGroupId]
 
-        Log.d("CheckRadioId", "===================================")
-        Log.d("CheckRadioId", "selected section: ${section.title}")
-        dummySections.forEach {
-            if (it.title != section.title) {
-                Log.d("CheckRadioId", "findwithtag section: ${section.title}")
-                Log.d("CheckRadioId", "findwithtag loop: ${it.title}")
-                Log.d("CheckRadioId", "===================================")
-                val radioGroup = binding.root.findViewWithTag<RadioGroupDropdown>(it.title)
-                radioGroup.clearSelection()
-            }
-        }
-        currentSectionContent = section.content[radioButtonId]
+//        if (radioButtonId < section.content.size) {
+
+        val content = section.content[radioButtonId]
+
         Toast.makeText(
             this,
-            "${section.title} ${currentSectionContent?.name}",
+            "${section.title} ${content.name}",
             Toast.LENGTH_SHORT
         ).show()
+//        }
     }
 }
 

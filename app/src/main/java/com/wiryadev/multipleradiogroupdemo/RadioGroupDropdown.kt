@@ -22,7 +22,7 @@ class RadioGroupDropdown @JvmOverloads constructor(
     }
 
     var onContainerClicked: ((String) -> Unit)? = null
-    var onCheckedChange: ((String, Int) -> Unit)? = null
+    var onCheckedChange: ((Int) -> Unit)? = null
 
     init {
         setupView()
@@ -37,9 +37,9 @@ class RadioGroupDropdown @JvmOverloads constructor(
             if (isExpanded()) collapse() else expand()
         }
         binding.radioSelection.setOnCheckedChangeListener { _, checkedId ->
+            Log.d("CheckRadioId", "checked listener $checkedId")
             if (checkedId != NO_ID) {
-                onCheckedChange?.invoke(tag.toString(), checkedId)
-                Log.d("CheckRadioId", "checked listener $checkedId")
+                onCheckedChange?.invoke(checkedId)
             }
         }
     }
@@ -49,12 +49,22 @@ class RadioGroupDropdown @JvmOverloads constructor(
         binding.root.tag = title
     }
 
+    fun setCheckedId(id: Int) {
+        binding.radioSelection.apply {
+            setOnCheckedChangeListener(null)
+            check(id)
+            setOnCheckedChangeListener { _, checkedId ->
+                onCheckedChange?.invoke(checkedId)
+            }
+        }
+    }
+
     fun clearSelection() {
         binding.radioSelection.apply {
             setOnCheckedChangeListener(null)
             clearCheck()
             setOnCheckedChangeListener { _, checkedId ->
-                onCheckedChange?.invoke(id.toString(), checkedId)
+                onCheckedChange?.invoke(checkedId)
             }
         }
     }
@@ -65,7 +75,6 @@ class RadioGroupDropdown @JvmOverloads constructor(
                 id = data.first
                 text = data.second
             }
-            Log.d("CheckRadioId", "setData button Id: ${radioButton.id}")
             binding.radioSelection.addView(radioButton)
         }
     }
@@ -74,7 +83,7 @@ class RadioGroupDropdown @JvmOverloads constructor(
 
     fun expand() {
         with(binding) {
-            if (!radioSelection.isVisible) {
+            if (!isExpanded()) {
                 imgChevronDropdown.animate().rotationBy(-180f)
                 radioSelection.isVisible = true
             }
@@ -83,7 +92,7 @@ class RadioGroupDropdown @JvmOverloads constructor(
 
     fun collapse() {
         with(binding) {
-            if (radioSelection.isVisible) {
+            if (isExpanded()) {
                 imgChevronDropdown.animate().rotationBy(180f)
                 radioSelection.isVisible = false
 //                findViewById()
